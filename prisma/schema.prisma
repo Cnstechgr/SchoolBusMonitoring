@@ -1,0 +1,197 @@
+generator client {
+    provider = "prisma-client-js"
+    binaryTargets = ["native", "linux-musl-arm64-openssl-3.0.x"]
+    output = "/home/ubuntu/school_bus_monitoring/nextjs_space/node_modules/.prisma/client"
+}
+
+datasource db {
+    provider = "postgresql"
+    url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  ADMIN
+  PARENT
+  DRIVER
+  STAFF
+}
+
+enum AlertType {
+  ACCIDENT
+  SPEEDING
+  SMOKE
+  ALCOHOL
+  ROUTE_DEVIATION
+  EMERGENCY
+}
+
+enum AlertPriority {
+  CRITICAL
+  WARNING
+  INFO
+}
+
+enum BusStatus {
+  ACTIVE
+  INACTIVE
+  MAINTENANCE
+}
+
+enum TripStatus {
+  SCHEDULED
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+}
+
+model User {
+  id            String         @id @default(cuid())
+  name          String
+  email         String         @unique
+  password      String
+  role          UserRole       @default(PARENT)
+  phone         String?
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+  children      Student[]      @relation("ParentChildren")
+  driver        Driver?
+  notifications Notification[]
+}
+
+model Driver {
+  id              String           @id @default(cuid())
+  userId          String           @unique
+  user            User             @relation(fields: [userId], references: [id])
+  licenseNumber   String
+  licenseExpiry   DateTime
+  busId           String?          @unique
+  bus             Bus?             @relation(fields: [busId], references: [id])
+  behaviorMetrics DriverBehavior[]
+  trips           Trip[]
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+}
+
+model Bus {
+  id           String        @id @default(cuid())
+  vehicleId    String        @unique
+  plateNumber  String        @unique
+  capacity     Int
+  status       BusStatus     @default(ACTIVE)
+  routeId      String?
+  route        Route?        @relation(fields: [routeId], references: [id])
+  driver       Driver?
+  students     Student[]
+  gpsLocations GPSLocation[]
+  alerts       Alert[]
+  trips        Trip[]
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+}
+
+model Route {
+  id        String      @id @default(cuid())
+  name      String
+  startTime String
+  endTime   String
+  buses     Bus[]
+  stops     RouteStop[]
+  createdAt DateTime    @default(now())
+  updatedAt DateTime    @updatedAt
+}
+
+model RouteStop {
+  id        String   @id @default(cuid())
+  routeId   String
+  route     Route    @relation(fields: [routeId], references: [id], onDelete: Cascade)
+  name      String
+  latitude  Float
+  longitude Float
+  stopOrder Int
+  createdAt DateTime @default(now())
+}
+
+model Student {
+  id             String          @id @default(cuid())
+  name           String
+  grade          String
+  parentId       String
+  parent         User            @relation("ParentChildren", fields: [parentId], references: [id])
+  busId          String?
+  bus            Bus?            @relation(fields: [busId], references: [id])
+  boardingEvents BoardingEvent[]
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+}
+
+model GPSLocation {
+  id        String   @id @default(cuid())
+  busId     String
+  bus       Bus      @relation(fields: [busId], references: [id], onDelete: Cascade)
+  latitude  Float
+  longitude Float
+  speed     Float
+  heading   Float?
+  timestamp DateTime @default(now())
+}
+
+model Alert {
+  id           String        @id @default(cuid())
+  type         AlertType
+  priority     AlertPriority
+  busId        String?
+  bus          Bus?          @relation(fields: [busId], references: [id])
+  message      String
+  latitude     Float?
+  longitude    Float?
+  gForce       Float?
+  resolved     Boolean       @default(false)
+  resolvedAt   DateTime?
+  createdAt    DateTime      @default(now())
+}
+
+model DriverBehavior {
+  id            String   @id @default(cuid())
+  driverId      String
+  driver        Driver   @relation(fields: [driverId], references: [id], onDelete: Cascade)
+  speedScore    Float
+  brakingScore  Float
+  overallScore  Float
+  violations    Int
+  recordedAt    DateTime @default(now())
+}
+
+model Trip {
+  id             String          @id @default(cuid())
+  busId          String
+  bus            Bus             @relation(fields: [busId], references: [id])
+  driverId       String
+  driver         Driver          @relation(fields: [driverId], references: [id])
+  status         TripStatus      @default(SCHEDULED)
+  startTime      DateTime?
+  endTime        DateTime?
+  boardingEvents BoardingEvent[]
+  createdAt      DateTime        @default(now())
+}
+
+model BoardingEvent {
+  id        String   @id @default(cuid())
+  tripId    String
+  trip      Trip     @relation(fields: [tripId], references: [id], onDelete: Cascade)
+  studentId String
+  student   Student  @relation(fields: [studentId], references: [id])
+  type      String   // 'BOARD' or 'ALIGHT'
+  timestamp DateTime @default(now())
+  stopName  String?
+}
+
+model Notification {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title     String
+  message   String
+  type      String
+  read      Boolean  @default(false)
+  createdAt DateTime @default(now())
+}

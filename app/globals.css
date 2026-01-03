@@ -1,0 +1,67 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --primary: #f59e0b;
+  --primary-dark: #d97706;
+  --secondary: #3b82f6;
+  --danger: #ef4444;
+  --success: #22c55e;
+}
+
+body {
+  background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+  min-height: 100vh;
+}
+
+[data-hydration-error] { display: none !important; }
+
+.sidebar-link {
+  @apply flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200;
+}
+
+.sidebar-link:hover {
+  @apply bg-amber-100 text-amber-700;
+}
+
+.sidebar-link.active {
+  @apply bg-amber-500 text-white shadow-lg;
+}
+
+.card {
+  @apply bg-white rounded-xl shadow-md p-6 transition-all duration-300 hover:shadow-lg;
+}
+
+.btn-primary {
+  @apply bg-amber-500 hover:bg-amber-600 text-white font-semibold py-2 px-4 rounded-lg transition-all duration-200 shadow-md hover:shadow-lg;
+}
+
+.btn-secondary {
+  @apply bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2 px-4 rounded-lg transition-all duration-200;
+}
+
+.stat-card {
+  @apply bg-white rounded-xl p-6 shadow-md border-l-4 transition-all duration-300 hover:shadow-lg hover:scale-[1.02];
+}
+
+.alert-critical {
+  @apply bg-red-50 border-red-500 text-red-700;
+}
+
+.alert-warning {
+  @apply bg-amber-50 border-amber-500 text-amber-700;
+}
+
+.alert-info {
+  @apply bg-blue-50 border-blue-500 text-blue-700;
+}
+
+@keyframes pulse-dot {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+.pulse-animation {
+  animation: pulse-dot 2s ease-in-out infinite;
+}
